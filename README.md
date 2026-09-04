@@ -22,7 +22,7 @@
   - Allow Egress FQDN `login.microsoftonline.com`、`aadcdn.msftauth.net`、`msauth.net`、`mysignins.microsoft.com`（有使用 Entra ID SSO 才需要）
   - Deny Egress `0.0.0.0/0`
 
-![firewall policy](firewall-policy-screenshot.png)
+![firewall policy](images/firewall-policy-screenshot.png)
 
 ### 1.3 建立 VPN Gateway & Tunnel（是否 HA VPN 不影響此 Lab）
 
@@ -34,11 +34,11 @@
 
 ### 2.1 建立 Private Service Connect（PSC）並設定指向所有 Google APIs
 
-![private service connect](private-service-connect.png)
+![private service connect](images/private-service-connect.png)
 
 ### 2.2 建立 VPN Gateway & Tunnel 並通告 PSC IP
 
-![cloud router advertise PSC IP](cloud-router-advertise-psc-ip.png)
+![cloud router advertise PSC IP](images/cloud-router-advertise-psc-ip.png)
 
 ## 3. 建置 Gemini Enterprise 專用 GCP Project 並啟用 Gemini Enterprise
 
@@ -56,7 +56,7 @@
 
 將 Org policy「Restrict allowed data sources for data connectors」啟用並取代父項設定，設定 `allowedDataSources` 為 onedrive 或是其他資料源。
 
-![org policy restrict allowed data sources](org-policy-Restrict-allowed-data-sources-for-data-connectors.png)
+![org policy restrict allowed data sources](images/org-policy-Restrict-allowed-data-sources-for-data-connectors.png)
 
 ## 6. 建立 Gemini Enterprise Datastore
 
@@ -72,16 +72,16 @@
    參考：[set-up-data-store](https://docs.cloud.google.com/gemini/enterprise/docs/connectors/ms-onedrive/set-up-data-store)
 3. DataStore 建立完成後會有一組「Collection ID」，記下來回到 Entra ID 再次設定「Federated credentials」。
 
-   ![gemini enterprise onedrive connector collection id](gemini-enterprise-onedrive-connector-collection-id.png)
+   ![gemini enterprise onedrive connector collection id](images/gemini-enterprise-onedrive-connector-collection-id.png)
 
 4. 到「Certificates & secrets」→「Federated credentials」→ 新增 Credential。資料依照下方文件填入，而在 Subject identifier 欄位填入「Collection ID」。
    參考：[add-fed-credentials](https://docs.cloud.google.com/gemini/enterprise/docs/connectors/ms-onedrive/third-party-config#add-fed-credentials)
 
-   ![entra id federated credentials](entra-id-Federated-credentials.png)
+   ![entra id federated credentials](images/entra-id-Federated-credentials.png)
 
 5. API Permissions 需要開啟 `Files.Read.All`、`Sites.Read.All`、`User.Read.All`。如果允許從 GE 做增刪改，則還需要 `Files.ReadWrite.AppFolder`、`Files.ReadWrite`。
 
-   ![entra id api permissions](entra-id-api-permissions.png)
+   ![entra id api permissions](images/entra-id-api-permissions.png)
 
 ## 7. 測試
 
