@@ -6,6 +6,8 @@
 
 適合情境：企業導入 Gemini Enterprise 前，需要驗證「僅允許透過地端 VPN 私有連線存取，禁止公網存取」的資安需求，且尚無實體地端網路可供測試。
 
+![architecture diagram](images/architecture-diagram.drawio.png)
+
 ---
 
 ## 1. 建置一個 sim-onprem-vpc VPC 仿造地端網路環境
@@ -24,7 +26,11 @@
 
 ![firewall policy](images/firewall-policy-screenshot.png)
 
-### 1.3 建立 VPN Gateway & Tunnel（是否 HA VPN 不影響此 Lab）
+### 1.3 建立 Cloud NAT（Public NAT）
+
+VM 沒有對外 IP，因此 1.2 允許 Egress 的那幾組 FQDN（`discoveryengine.clients6.google.com` 等無法被 PSC IP 解析、需要走外網的網域）若沒有 NAT Gateway 是無法實際連上外網的。需要在 sim-onprem-vpc 建立一個 Cloud NAT（Public NAT），並將 subnet 範圍納入 NAT 的來源範圍，讓這些允許的 Egress 規則真正有出口可以連到 Internet。
+
+### 1.4 建立 VPN Gateway & Tunnel（是否 HA VPN 不影響此 Lab）
 
 > 備註：
 > 1. 在 GCP 建立純雲端 VPN Session，先在一端建好後會得到「Cloud Router BGP IP」以及「對等 BGP IP」，再拿這兩個 IP 去建另外一邊 VPN 就可以。
@@ -44,7 +50,9 @@
 
 ### 3.1 Gemini Enterprise 需要完成員工身分設定才會出現專屬登入 URL
 
-## 4. 設定 VPC Service Controls（VPC SC）
+## 4. 設定 VPC Service Controls（VPC SC）（選擇性建置項目）
+
+> 此節為選擇性建置項目，非本 Lab 驗證私有連線的必要條件；若企業需要額外卡控 API 存取來源 IP，可依需求建置。
 
 ### 4.1 需要卡控來源 IP，需要有 Access Context Manager（ACM）
 
