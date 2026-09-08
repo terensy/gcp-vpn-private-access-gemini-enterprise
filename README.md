@@ -8,6 +8,32 @@
 
 ![architecture diagram](images/architecture-diagram.drawio.png)
 
+## 目錄
+
+- [TL;DR](#tldr)
+- [1. 建置一個 sim-onprem-vpc VPC 仿造地端網路環境](#1-建置一個-sim-onprem-vpc-vpc-仿造地端網路環境)
+  - [1.1 建立地端網段與測試 VM](#11-建立地端網段與測試-vm)
+  - [1.2 sim-onprem-vpc 防火牆設定](#12-sim-onprem-vpc-防火牆設定)
+  - [1.3 建立 Cloud NAT（Public NAT）](#13-建立-cloud-natpublic-nat)
+  - [1.4 建立 VPN Gateway & Tunnel（是否 HA VPN 不影響此 Lab）](#14-建立-vpn-gateway-tunnel是否-ha-vpn-不影響此-lab)
+- [2. 建置另外一個 cloud-host-vpc VPC 當作 GCP 雲上網路環境](#2-建置另外一個-cloud-host-vpc-vpc-當作-gcp-雲上網路環境)
+  - [2.1 建立 Private Service Connect（PSC）並設定指向所有 Google APIs](#21-建立-private-service-connectpsc並設定指向所有-google-apis)
+  - [2.2 建立 VPN Gateway & Tunnel 並通告 PSC IP](#22-建立-vpn-gateway-tunnel-並通告-psc-ip)
+- [3. 建置 Gemini Enterprise 專用 GCP Project 並啟用 Gemini Enterprise](#3-建置-gemini-enterprise-專用-gcp-project-並啟用-gemini-enterprise)
+  - [3.1 Gemini Enterprise 需要完成員工身分設定才會出現專屬登入 URL](#31-gemini-enterprise-需要完成員工身分設定才會出現專屬登入-url)
+- [4. 設定 VPC Service Controls（VPC SC）（選擇性建置項目）](#4-設定-vpc-service-controlsvpc-sc選擇性建置項目)
+  - [4.1 需要卡控來源 IP，需要有 Access Context Manager（ACM）](#41-需要卡控來源-ip需要有-access-context-manageracm)
+  - [4.2 設定要保護的 GCP Project、APIs 等等](#42-設定要保護的-gcp-projectapis-等等)
+- [5. 修改 Project Level 的 Org Policy](#5-修改-project-level-的-org-policy)
+  - [5.1 啟用資料連接器來源限制](#51-啟用資料連接器來源限制)
+- [6. 建立 Gemini Enterprise Datastore](#6-建立-gemini-enterprise-datastore)
+  - [6.1 建立 DataStore](#61-建立-datastore)
+  - [6.2 建立 DataStore 與 OneDrive 連結](#62-建立-datastore-與-onedrive-連結)
+- [7. 測試](#7-測試)
+  - [7.1 驗證私有連線與登入流程](#71-驗證私有連線與登入流程)
+  - [7.2 驗證功能](#72-驗證功能)
+- [關鍵字 / Keywords](#關鍵字-keywords)
+
 ---
 
 ## 1. 建置一個 sim-onprem-vpc VPC 仿造地端網路環境
