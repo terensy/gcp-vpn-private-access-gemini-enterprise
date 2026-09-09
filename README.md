@@ -32,6 +32,11 @@
 - [7. 測試](#7-測試)
   - [7.1 驗證私有連線與登入流程](#71-驗證私有連線與登入流程)
   - [7.2 驗證功能](#72-驗證功能)
+- [8. 使用 Cloud Logging Router 功能將 Gemini Enterprise Log 導入 Pub/Sub](#8-使用-cloud-logging-router-功能將-gemini-enterprise-log-導入-pubsub)
+  - [8.1 確認 Gemini Enterprise App 已啟用 Log 紀錄功能](#81-確認-gemini-enterprise-app-已啟用-log-紀錄功能)
+  - [8.2 建立 Pub/Sub 服務](#82-建立-pubsub-服務)
+  - [8.3 於 Cloud Logging 新增 Log Router](#83-於-cloud-logging-新增-log-router)
+- [9. 使用 Open Source ELK 接收 Pub/Sub 中的 Log 資料](#9-使用-open-source-elk-接收-pubsub-中的-log-資料)
 - [關鍵字 / Keywords](#關鍵字-keywords)
 
 ---
@@ -127,6 +132,71 @@ VM 沒有對外 IP，因此 1.2 允許 Egress 的那幾組 FQDN（`discoveryengi
 
 確認可以在對話頁面進行 AI 對話，再確認可以查詢到放在 OneDrive 中的文件。
 
+## 8. 使用 Cloud Logging Router 功能將 Gemini Enterprise Log 導入 Pub/Sub
+
+### 8.1 確認 Gemini Enterprise App 已啟用 Log 紀錄功能
+
+![GE enable log](images/gemini-enterprise-enable-log.png)
+
+### 8.2 建立 Pub/Sub 服務
+
+在本次 Lab 中為更符合實際企業級 Landing zone 資源階層，另外創建 Telemetry 專用 Project 用來開立 Pub/Sub 服務。
+
+### 8.3 於 Cloud Logging 新增 Log Router
+
+主要是篩選器的部分要事先知道需要哪些 Log 資料進到 Pub/Sub。若不做資料篩選，會在 Data Transfer Out 有比較多費用產生。
+
+![Log Router Selector](images/log-router-selector.png)
+
+## 9. 使用 Open Source ELK 接收 Pub/Sub 中的 Log 資料
+
+### 9.1 建立 telemetry-demo-server VM 並安裝 ELK Stack
+
+在 sim-onprem-vpc 中另外新增一個 subnet，建立一台 Ubuntu 22.04 VM（`telemetry-demo-server`，同樣不開對外 IP，透過 IAP 登入），跟 1.1 節的 `sim-onprem-win-vm` 同屬一個 Project、同一個 VPC，只是分屬不同 subnet。加入 Elastic 官方 APT 來源後，直接用套件管理器安裝 Elasticsearch、Logstash、Kibana（本次驗證版本為 8.19.21），三個服務都跑在同一台 VM 上：
+
+- Elasticsearch：監聽 `9200`（HTTP）、`9300`（節點通訊）
+- Logstash：監聽 `5044`（Beats input，範例用）、`9600`（monitoring API）
+- Kibana：監聽 `5601`
+
+> 這是 Lab 驗證用的精簡拓樸，正式環境建議依資料量將三個元件拆到不同節點，並規劃 Elasticsearch 叢集。
+
+### 9.2 設定 Logstash Pipeline 訂閱 Pub/Sub
+
+安裝 `logstash-input-google_pubsub` 這個 Logstash 官方外掛，並在 `/etc/logstash/conf.d/` 下新增一個 pipeline 設定檔，訂閱第 8 節建立的 Pub/Sub Subscription：
+
+```
+input {
+  google_pubsub {
+    project_id    => "<Telemetry 專用 Project ID>"
+    topic         => "gemini-enterprise-log-collector"
+    subscription  => "gemini-enterprise-log-collector-sub"
+    codec         => "json"
+  }
+}
+
+output {
+  elasticsearch {
+    hosts => ["http://localhost:9200"]
+    index => "gcp-logs-%{+YYYY.MM.dd}"
+  }
+}
+```
+
+VM 使用預設的 Compute Engine 服務帳戶（`cloud-platform` scope）搭配 Application Default Credentials 認證，不需要額外下載金鑰檔；但要記得把該服務帳戶加到 Pub/Sub Subscription 所在專案，並授予 `Pub/Sub Subscriber` 角色，Logstash 才能實際拉到訊息。
+
+### 9.3 驗證資料寫入與 Kibana 檢視
+
+Pipeline 啟動後，可以用以下指令確認索引有持續產生、文件數增加：
+
+```
+curl -s localhost:9200/_cat/indices?v
+```
+
+會看到依日期切分的索引，例如 `gcp-logs-2026.09.09`。接著在 Kibana（`http://<VM 內網 IP>:5601`）建立對應的 Data View，就能檢視、搜尋、視覺化從 Gemini Enterprise 導出的使用紀錄（如查詢內容、回覆狀態、呼叫的 API 方法等）。
+
+> ⚠️ 目前這台 Lab VM 的 `xpack.security.enabled` 設為 `false`，Elasticsearch／Kibana 都沒有帳號密碼驗證，僅靠「VM 沒有對外 IP、只能透過 IAP/VPC 內部連線」做隔離。若要正式上線，務必開啟 Elastic 內建的 security 功能（帳號密碼或 SSO）並加上 TLS，不能只依賴網路隔離。
+
 ## 關鍵字 / Keywords
 
-GCP, Google Cloud, Gemini Enterprise, Cloud VPN, Private Service Connect (PSC), VPC Service Controls (VPC SC), Access Context Manager (ACM), Org Policy, Microsoft Entra ID, OneDrive Connector, Federated Credentials, SSO, 私有連線, 地端網路模擬, 混合雲架構
+GCP, Google Cloud, Gemini Enterprise, Cloud VPN, Private Service Connect (PSC), VPC Service Controls (VPC SC), Access Context Manager (ACM), Org Policy, Microsoft Entra ID, OneDrive Connector, Federated Credentials, SSO, Cloud Logging, Log Router, Pub/Sub, ELK, Elasticsearch, Logstash, Kibana, IAP, 私有連線, 地端網路模擬, 混合雲架構
+
