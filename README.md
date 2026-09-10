@@ -1,3 +1,5 @@
+**繁體中文** | [English](README.en.md)
+
 # 如何在 GCP 雲端仿造地端網路，透過 VPN 私有連線安全存取 Gemini Enterprise（Private Service Connect + VPC Service Controls 實作教學）
 
 ## TL;DR
@@ -15,10 +17,10 @@
   - [1.1 建立地端網段與測試 VM](#11-建立地端網段與測試-vm)
   - [1.2 sim-onprem-vpc 防火牆設定](#12-sim-onprem-vpc-防火牆設定)
   - [1.3 建立 Cloud NAT（Public NAT）](#13-建立-cloud-natpublic-nat)
-  - [1.4 建立 VPN Gateway & Tunnel（是否 HA VPN 不影響此 Lab）](#14-建立-vpn-gateway-tunnel是否-ha-vpn-不影響此-lab)
+  - [1.4 建立 VPN Gateway & Tunnel（是否 HA VPN 不影響此 Lab）](#14-建立-vpn-gateway--tunnel是否-ha-vpn-不影響此-lab)
 - [2. 建置另外一個 cloud-host-vpc VPC 當作 GCP 雲上網路環境](#2-建置另外一個-cloud-host-vpc-vpc-當作-gcp-雲上網路環境)
   - [2.1 建立 Private Service Connect（PSC）並設定指向所有 Google APIs](#21-建立-private-service-connectpsc並設定指向所有-google-apis)
-  - [2.2 建立 VPN Gateway & Tunnel 並通告 PSC IP](#22-建立-vpn-gateway-tunnel-並通告-psc-ip)
+  - [2.2 建立 VPN Gateway & Tunnel 並通告 PSC IP](#22-建立-vpn-gateway--tunnel-並通告-psc-ip)
 - [3. 建置 Gemini Enterprise 專用 GCP Project 並啟用 Gemini Enterprise](#3-建置-gemini-enterprise-專用-gcp-project-並啟用-gemini-enterprise)
   - [3.1 Gemini Enterprise 需要完成員工身分設定才會出現專屬登入 URL](#31-gemini-enterprise-需要完成員工身分設定才會出現專屬登入-url)
 - [4. 設定 VPC Service Controls（VPC SC）（選擇性建置項目）](#4-設定-vpc-service-controlsvpc-sc選擇性建置項目)
@@ -37,7 +39,7 @@
   - [8.2 建立 Pub/Sub 服務](#82-建立-pubsub-服務)
   - [8.3 於 Cloud Logging 新增 Log Router](#83-於-cloud-logging-新增-log-router)
 - [9. 使用 Open Source ELK 接收 Pub/Sub 中的 Log 資料](#9-使用-open-source-elk-接收-pubsub-中的-log-資料)
-- [關鍵字 / Keywords](#關鍵字-keywords)
+- [關鍵字 / Keywords](#關鍵字--keywords)
 
 ---
 
